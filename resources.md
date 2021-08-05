@@ -13,9 +13,13 @@ To check out
 - [Jon Calhoun](https://www.calhoun.io/) | teaches Go
 - [Francesc Campoy Flores](https://www.campoy.cat/blog) | Google developer advocate
 - [Fatih Arslan](https://arslan.io/posts/) | Creator of some well-known libs (vim-go, color)
+- [Jessie Frazelle](https://blog.jessfraz.com/)
 
 ### News
 - [Golang Weekly](https://golangweekly.com/latest)
 
 ### Videos
 - [justforfunc](https://www.youtube.com/channel/UC_BzFbxG2za3bp5NRRRXJSw)
+
+### Podcasts
+- [Go Time](https://changelog.com/gotime)
