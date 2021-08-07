@@ -50,4 +50,3 @@ func sq(in <-chan int) <-chan int {
 	}()
 	return out
 }
-
