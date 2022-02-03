@@ -1,6 +1,6 @@
 # daily-go
 
-Wherein I attempt to solidify my understanding & improve my articulation of Go via daily learnings.
+Wherein I attempt to solidify my understanding & improve my articulation of Go via regular learnings.
 
 These will be scoped nuggets that may become entrypoints to deeper dives, but should contain a reminder or learning in and of itself.
 
