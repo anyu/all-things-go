@@ -36,7 +36,7 @@ In a multi-threaded process, threads have their own stacks, but share the heap.
 
 In Go, the basic unit of organization is a **goroutine**. 
 
-You can think of a goroutine as a lightweight thread. 
+You can think of a goroutine as a lightweight thread, or a function that can run concurrently with other code.
 
 Whereas threads are managed by the OS, however, goroutines are managed by Go's runtime. You can easily communicate between two goroutines, whereas you can't with threads. 
 
@@ -45,6 +45,71 @@ Whereas threads are managed by the OS, however, goroutines are managed by Go's r
 Goroutines are also very cheap; they're initialized with only 2KB of stack memory and grows when necessary. Whereas in Java, a thread is allocated a fixed memory size.
 
 Every Go program has at least 1 goroutine: the `main` goroutine, which is automatically created when the program runs.
+
+### Creating a goroutine
+
+Let's create a goroutine via the `go` keyword:
+
+```go
+func main() {
+  go hello()
+  // do something else
+}
+
+func hello() {
+  fmt.Println("hello")
+}
+```
+
+We can also create one via an anonymous function:
+
+```go
+func main() {
+  go func() {
+    fmt.Println("hello")
+  }()
+  // do something else
+}
+```
+
+or assigning it to a variable:
+
+```go
+func main() {
+  hello := func() {
+    fmt.Println("hello")
+  }
+  go hello()
+  // do something else
+}
+```
+
+### Synchronizing goroutines
+
+The above examples have a problem in that the `main` goroutine will exit before the other goroutine has a chance to run.
+
+The simplest way to coordinate/synchronize goroutines is via **WaitGroups**.
+
+A **WaitGroup** blocks a program's execution until the goroutines in it have executed. You can think of it like using a counter: 
+- `Add` increments the counter
+- `Done` decrements it
+- `Wait` blocks until the counter is 0
+
+```go
+func main() {
+
+  var wg sync.WaitGroup
+
+  wg.Add(1)
+
+  go func() {
+    defer wg.Done()
+    fmt.Println("hello")
+  }()
+
+  wg.Wait()
+}
+```
 
 ## Kicking off an async operation
 
