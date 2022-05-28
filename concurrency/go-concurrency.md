@@ -86,9 +86,7 @@ func main() {
 
 ### Synchronizing goroutines
 
-The above examples have a problem in that the `main` goroutine will exit before the other goroutine has a chance to run.
-
-The simplest way to coordinate/synchronize goroutines is via **WaitGroups**.
+The above examples have a problem in that the `main` goroutine will exit before the other goroutine has a chance to run. The simplest way to coordinate/synchronize goroutines is via **WaitGroups**.
 
 A **WaitGroup** blocks a program's execution until the goroutines in it have executed. You can think of it like using a counter: 
 - `Add` increments the counter
@@ -107,13 +105,72 @@ func main() {
     fmt.Println("hello")
   }()
 
-  wg.Wait()
+  wg.Wait() // blocks until Done() completes
+  // do something else
 }
 ```
 
-## Kicking off an async operation
+## Communicating between goroutines
 
-## Receiving data back from async operation
+Often, we don't just need to kick off concurrent execution, but also need to act on the results.
+
+**Channels** are the mechanism via which goroutines can communicate/share data bidirectionally with each other.
+
+```go
+func main() {
+  // create a channel via `make(chan TYPE)`
+  // one convention is to name a channel variable `stream`
+  dataStream := make(chan string) 
+  go func() {
+    dataStream <- "ping" // send a value _to_ the channel
+  }()
+
+  result := <-dataStream // receive a value _from_ a channel
+  fmt.Println(result)
+}
+```
+
+By default, channels are bidirectional; you can send or receive data on it. You can constrain a channel to be unidirectional:
+
+```go
+// receive only
+dataStream := make(<-chan string)
+
+// send only
+dataStream := make(chan<- string)
+```
+
+This is more common in function parameters and return types.
+
+### Buffered channels
+
+Channels block. 
+
+- A goroutine that wants to write to a channel that's full will wait until the channel is empty.
+- similarly, it'll wait for a channel to be empty before reading from it.
+
+By default, channels are **unbuffered** - they'll only accept sends if there's a corresponding receive that's ready to receive the value.
+
+**Buffered** channels accept a limited number of values without needing a corresponding receive.
+
+In other words, a buffered receive channel will block only if there's no value in the channel to receive.
+
+A buffered send channel will block only if there's no available buffer to place the value being sent.
+
+```go
+func main() {
+  dataStream := make(chan string, 2) // removing the 2 here will cause a deadlock - TODO: explain
+
+  dataStream <- "msg 1"
+  dataStream <- "msg 2"
+
+  fmt.Println(<-dataStream)
+  fmt.Println(<-dataStream)
+}
+```
+
+### Closing channels
+
 
 ## Handling errors
 
