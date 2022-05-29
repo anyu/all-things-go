@@ -31,24 +31,3 @@ case "eee", "fff":
     fmt.Printf("category 3")
 }
 ```
-
-
-#### Select statements
-- lets a goroutine wait on multiple communication operations
-- blocks until one of its cases can run, then it executes that case. It chooses one randomly if multiple are ready.
-- empty select blocks forever, results in deadlock, panics
-
-```go
-select {}
-```
-
-- used for cancelling contexts
-```go
-select {
-case <-ctx.Done():
-    err = ctx.Err()
-    break
-case time.After(TODO: some time):
-}
-https://github.com/nytimes/auth-docs/blob/main/docs/team/interviews/flakylib/README.md
-```

@@ -7,7 +7,6 @@
 
 To check out
 - [Russ Cox](https://research.swtch.com/) | core Go author
-- [Peter Bourgon](https://peter.bourgon.org/articles/) | Go kit creator
 - [Ilija Eftimov](https://ieftimov.com/posts/)
 - [Jaana Dogan](https://rakyll.org/archive/) | ex Googler
 - [Jon Calhoun](https://www.calhoun.io/) | teaches Go

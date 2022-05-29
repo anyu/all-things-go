@@ -277,15 +277,15 @@ case c3<- struct{}{}:
 
 While they look like `switch` blocks, these case statements aren't tested sequentially and execution does not 'fall through'. 
 
-All channel read/writes are evaluted simultaneously. If no channels are ready, the entire `select` blocks. When one channel is ready, its statement executes. 
+All channel read/writes are evaluted simultaneously. 
 
-If no channel is ready, but you want to still take an action in the meantime, you can use a `default` case.
-
-An empty select statement blocks forever:
-
-```go
-select {}
-```
+- If no channels are ready, the entire `select` blocks. When one channel is ready, its statement executes. 
+- If multiple channels are ready, it chooses one randomly.
+- If no channel is ready, but you want to still take an action in the meantime, you can use a `default` case.
+- An empty select statement blocks forever:
+  ```go
+  select {}
+  ```
 
 If there's nothing to do while channels are blocked, but you don't want to block forever, add a time out:
 
