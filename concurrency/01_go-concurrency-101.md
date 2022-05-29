@@ -1,16 +1,18 @@
-# Go Concurrency
+# Go Concurrency 101
+
+*content largely from Concurrency in Go by Katherine Cox-Buday*
 
 ## The Basics
 
-The first thing to clear up is the difference between **concurrency** and **parallelism**, which are often used interchangeably, but is not the same.
+The first thing to clear up is the difference between **concurrency** and **parallelism**, which are often used interchangeably, but are not the same.
 
-- **Concurrency** is about juggling multiple tasks at once in a window of time (execution's start and end times overlap), but not actually executing them at the same time. 
+- **Concurrency** is about juggling multiple tasks at once in a window of time (execution start and end times overlap), but not actually executing them at the same time. 
 
 - **Parallelism** is actually executing tasks at the same time.
 
 An analogy helps here. Doing something concurrently is like making a meal - you kick off boiling pasta while chopping onions. Parallelism would be having helpers chopping onions simultaneously.
 
-Parallel tasks must be executed on different hardware (separate CPU cores); concurrent tasks could be executed on the same hardware.
+Parallel tasks must be executed on different hardware (separate CPU cores); concurrent tasks can be executed on the same hardware.
 
 ## Understanding OS processes, threads
 
@@ -18,7 +20,7 @@ Before we get into Go specific terms, let's get acquainted with some general con
 
 Most people have a clear idea of what a **computer program** is, so we'll start there. You have Slack, Google Chrome, Evernote, etc. They are stored on disk when not running.
 
-Well, when a program starts, it needs OS resources to run (eg. memory)
+When a program starts, it needs OS resources to run (eg. memory)
 
 - A **process** is essentially a program that's been loaded into memory along with the resouces it needs. The role of an OS, is to allocate resources to various processes.
 
@@ -197,8 +199,7 @@ func main() {
 	queue <- "two"
 	close(queue)
 
-	// Because we close'd the channel, the iteration ends after receiving 2 elements.
-  // Removing the close line would result in a deadlock
+	// Because we closed the channel, the iteration ends after receiving 2 elements. Removing the close line would result in a deadlock
 	for e := range queue {
 		fmt.Println(e)
 	}
@@ -232,7 +233,7 @@ As a channel consumer, you should only have to worry about 2 things:
 Keeping channel ownership scope small will make things easier to reason about.
 
 ```go
-// Notice how resultStream's lifecycle is encapsulated within chanOwner
+// notice how resultStream's lifecycle is encapsulated within chanOwner
 chanOwner := func() <-chan int {
   resultStream := make(chan int, 2)
   go func() {
