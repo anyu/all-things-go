@@ -84,7 +84,7 @@ func main() {
 }
 ```
 
-### Synchronizing goroutines
+## Synchronizing goroutines
 
 The above examples have a problem in that the `main` goroutine will exit before the other goroutine has a chance to run. The simplest way to coordinate/synchronize goroutines is via **WaitGroups**.
 
@@ -94,6 +94,7 @@ A **WaitGroup** blocks a program's execution until the goroutines in it have exe
 - `Wait` blocks until the counter is 0
 
 ```go
+
 func main() {
 
   var wg sync.WaitGroup
@@ -151,15 +152,21 @@ Channels block.
 
 By default, channels are **unbuffered** - they'll only accept sends if there's a corresponding receive that's ready to receive the value.
 
-**Buffered** channels accept a limited number of values without needing a corresponding receive.
+**Buffered** channels accept a limited number of values (its capacity) without needing a corresponding receive.
 
-In other words, a buffered receive channel will block only if there's no value in the channel to receive.
+In other words, a buffered receive channel will block only if the buffer is empty.
 
-A buffered send channel will block only if there's no available buffer to place the value being sent.
+A buffered send channel will block only if the buffer is full.
+
+> Note: An unbuffered channel really is just a buffered channel with a capacity of 0.
+
+> Use buffered channels with care as they hide possible deadlocks
 
 ```go
 func main() {
-  dataStream := make(chan string, 2) // removing the 2 here will cause a deadlock - TODO: explain
+  // removing the 2 here would cause a deadlock 
+  // unless sending to dataStream is in a separate go routine
+  dataStream := make(chan string, 2) 
 
   dataStream <- "msg 1"
   dataStream <- "msg 2"
@@ -171,6 +178,122 @@ func main() {
 
 ### Closing channels
 
+You can close a channel to signal that no more values will be sent to the channel.
+Note that you can still *read* from a close channel, but you can't send anything more to it.
 
-## Handling errors
+```go
+dataStream := make(chan int)
+close(dataStream)
+val, ok := <-dataStream
+fmt.Printf("%v: %v", ok, val) // false: 0
+```
 
+This can facilitate unblocking multiple goroutines waiting on the same channel (instead of writing `n` times to the channel to unblock each)
+
+```go
+func main() {
+	queue := make(chan string, 2)
+	queue <- "one"
+	queue <- "two"
+	close(queue)
+
+	// Because we close'd the channel, the iteration ends after receiving 2 elements.
+  // Removing the close line would result in a deadlock
+	for e := range queue {
+		fmt.Println(e)
+	}
+}
+```
+
+Closing or sending values to a closed channel panics.
+
+### Nil channels
+
+- Reading or writing to a `nil` channel will block (may deadlock)
+  ```go
+  var dataStream chan interface{}
+  <-dataStream
+  // fatal error: all goroutines are asleep - deadlock!
+  ```
+- Closing a `nil` channel will panic
+
+### Channel ownership/handling
+
+The goroutine that owns a channel should:
+1. Instantiate the channel (avoids risk of writing to or closing a `nil` channel)
+1. Perform writes or pass ownership to another goroutine
+1. Close the channel (avoids risk of writing to a closed channel)
+4. Encapsulate the above and expose them via a read channel
+
+As a channel consumer, you should only have to worry about 2 things:
+- knowing when a channel is closed // check 2nd return value from read operation
+- handling the fact that reads can and will block
+
+Keeping channel ownership scope small will make things easier to reason about.
+
+```go
+// Notice how resultStream's lifecycle is encapsulated within chanOwner
+chanOwner := func() <-chan int {
+  resultStream := make(chan int, 2)
+  go func() {
+    defer close(resultStream) // ensure channel is closed when done
+    for i := 0; i <= 2; i++ {
+      resultStream <- i
+    }
+  }()
+  return resultStream // will be implicity converted to read-only due to the return type
+}
+
+resultStream := chanOwner()
+for result := range resultStream { // range over channel to unblock
+  fmt.Printf("Received: %d\n", result)
+}
+fmt.Println("Done receiving")
+/*
+Received: 0
+Received: 1
+Received: 2
+Done receiving
+*/
+```
+
+## Select
+
+Selects help you compose channels together.
+
+```go
+var c1, c2 <- chan interface{}
+var c3 chan<- interface{}
+
+select {
+case <- c1:
+  // do something
+case <- c2:
+  // do something
+case c3<- struct{}{}: 
+  // do something  
+}
+```
+
+While they look like `switch` blocks, these case statements aren't tested sequentially and execution does not 'fall through'. 
+
+All channel read/writes are evaluted simultaneously. If no channels are ready, the entire `select` blocks. When one channel is ready, its statement executes. 
+
+If no channel is ready, but you want to still take an action in the meantime, you can use a `default` case.
+
+An empty select statement blocks forever:
+
+```go
+select {}
+```
+
+If there's nothing to do while channels are blocked, but you don't want to block forever, add a time out:
+
+```go
+var c<-chan int
+select {
+  case <-c: // blocks forever since we're reading from a nil channel
+  case <- time.After (1*time.Second):
+    fmt.Println("Timed out)
+}
+```
